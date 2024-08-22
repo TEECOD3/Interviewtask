@@ -1,35 +1,98 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 function App() {
   const [password, setPassword] = useState("");
+  const [number, setNumber] = useState<number>();
+  const [error, setError] = useState<string>("");
+  const [todos, setTodos] = useState<any[]>([]);
+  const [loading, setloading] = useState<boolean>(false);
+  const numberCheckRegex = /[0-9]/;
+  const uppercaseCheckRegex = /[A-Z]/;
+  const FilteredUncompletedTodos = useMemo(() => {
+    return todos.filter((todo) => !todo.completed);
+  }, [todos]);
 
-  const handlesubmit = (e) => {
+  console.log(FilteredUncompletedTodos);
+
+  const handlesubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("submitted");
+    if (
+      !password ||
+      !numberCheckRegex.test(password) ||
+      !uppercaseCheckRegex.test(password) ||
+      password.length <= 8
+    ) {
+      setError("invalid input");
+      return;
+    }
+    setloading(true);
+    fetch(`https://jsonplaceholder.typicode.com/todos?userId=${number}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        setTodos(data);
+        setloading(false);
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+      .finally(() => setloading(false));
   };
-  return (
-    <div className="flex items-center justify-center w-screen min-h-screen bg-zinc-200">
-      <div className="w-[80%] mx-auto bg-yellow-100/50 shadow-xl border-[1px] border-yellow-300 min-h-[80vh] rounded-xl flex text-center flex-col gap-y-4">
-        <h1 className="font-medium text-2xl lg:text-4xl text-gray-600 mb-6 mt-20  capitalize">
-          Todo filter app
-        </h1>
-        <form
-          className=" w-[90%] lg:w-[40%] mx-auto flex flex-col gap-y-8"
-          onSubmit={handlesubmit}
-        >
-          <input
-            className="p-4 rounded-md bg-blue-50 placeholder:text-sm placeholder:text-muted-foreground outline-1 outline-sky-300"
-            placeholder="Enter your password"
-          />
-          <input
-            className="p-4 rounded-md bg-blue-50 placeholder:text-sm placeholder:text-muted-foreground outline-1 outline-sky-300"
-            placeholder="Enter a number"
-          />
 
-          <button className="p-4 bg-blue-400 text-white rounded-md">
-            Submit
-          </button>
-        </form>
+  return (
+    <div className="flex items-center justify-center w-screen min-h-screen bg-zinc-20 0">
+      <div className="w-[80%] mx-auto bg-yellow-100/50 shadow-xl border-[1px] border-yellow-300 min-h-[80vh] rounded-xl flex text-center flex-col lg:flex-row gap-y-4">
+        <div className="w-full">
+          <h1 className="font-medium text-2xl lg:text-4xl text-gray-600 mb-6 mt-20  capitalize">
+            Todo filter app
+          </h1>
+
+          {error && <p className="text-red-500">{error}</p>}
+          <form
+            className=" w-[90%]  mx-auto flex flex-col gap-y-8"
+            onSubmit={handlesubmit}
+          >
+            <input
+              className="p-4 rounded-md bg-blue-50 placeholder:text-sm placeholder:text-muted-foreground outline-1 outline-sky-300"
+              placeholder="Enter your password"
+              onChange={(e) => {
+                setPassword(e.target.value);
+              }}
+            />
+            <input
+              type="number"
+              className="p-4 rounded-md bg-blue-50 placeholder:text-sm placeholder:text-muted-foreground outline-1 outline-sky-300"
+              placeholder="Enter a number"
+              onChange={(e) => {
+                setNumber(Number(e.target.value));
+              }}
+            />
+
+            <button className="p-4 bg-blue-400 text-white rounded-md">
+              {loading ? "loading" : "Submit"}
+            </button>
+          </form>
+        </div>
+        <div className="w-full py-10 flex flex-col gap-y-2 h-[80%] overflow-y-scroll px-2">
+          <h2 className="text-2xl capitalize text-gray-400 tracking-wide mb-3">
+            uncompleted todos
+          </h2>
+          {FilteredUncompletedTodos.length === 0 ? (
+            <div className="h-32 flex items-center justify-center">
+              {loading ? (
+                <span>loading..</span>
+              ) : (
+                <span> 👌No todos is uncompleted</span>
+              )}
+            </div>
+          ) : (
+            FilteredUncompletedTodos.map((todo) => (
+              <div className="p-2  bg-zinc-200 rounded-xl " key={todo.id}>
+                {todo.title}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
