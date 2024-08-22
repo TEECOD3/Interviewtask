@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
+import { Spinners3DotsBounce } from "./components/loader";
 
 function App() {
   const [password, setPassword] = useState("");
   const [number, setNumber] = useState<number>();
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string | null>("");
   const [todos, setTodos] = useState<any[]>([]);
   const [loading, setloading] = useState<boolean>(false);
   const numberCheckRegex = /[0-9]/;
@@ -25,7 +26,9 @@ function App() {
       setError("invalid input");
       return;
     }
+    setError(null);
     setloading(true);
+
     fetch(`https://jsonplaceholder.typicode.com/todos?userId=${number}`)
       .then((res) => res.json())
       .then((data) => {
@@ -69,25 +72,28 @@ function App() {
             />
 
             <button className="p-4 bg-blue-400 text-white rounded-md">
-              {loading ? "loading" : "Submit"}
+              {loading ? "loading..." : "Submit"}
             </button>
           </form>
         </div>
         <div className="w-full py-10 flex flex-col gap-y-2 h-[80%] overflow-y-scroll px-2">
-          <h2 className="text-2xl capitalize text-gray-400 tracking-wide mb-3">
+          <h2 className="text-2xl capitalize text-gray-600 tracking-wide mb-3 font-medium">
             uncompleted todos
           </h2>
           {FilteredUncompletedTodos.length === 0 ? (
             <div className="h-32 flex items-center justify-center">
               {loading ? (
-                <span>loading..</span>
+                <Spinners3DotsBounce className="size-6" />
               ) : (
                 <span> 👌No todos is uncompleted</span>
               )}
             </div>
           ) : (
             FilteredUncompletedTodos.map((todo) => (
-              <div className="p-2  bg-zinc-200 rounded-xl " key={todo.id}>
+              <div
+                className="p-2  bg-blue-50 shadow-lg rounded-xl "
+                key={todo.id}
+              >
                 {todo.title}
               </div>
             ))
